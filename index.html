@@ -173,7 +173,7 @@
       color: #cde8f5;
     }
 
-    /* Activation Switch */
+    /* Action Trigger */
     .btn-action {
       background: transparent;
       border: 1px solid #00e5ff;
@@ -243,6 +243,7 @@
   <script>
     let todoItems = JSON.parse(localStorage.getItem("jarvis_tasks") || "[]");
     let isListening = false;
+    let audioWakeLock = null;
 
     const subStatus = document.getElementById("subStatus");
     const visualizer = document.getElementById("visualizer");
@@ -254,9 +255,37 @@
 
     renderTodoList();
 
-    // Voice Synthesis
+    // Prevent mobile background audio throttling
+    function startAudioKeepAlive() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.value = 0.001; // Silent tone
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.start();
+      } catch (e) {}
+    }
+
+    // Launch Native Applications in background without leaving page
+    function launchNativeApp(uriScheme, fallbackWebUrl) {
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = uriScheme;
+      document.body.appendChild(iframe);
+      
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 2000);
+    }
+
+    // Speech Synthesis
     function speak(text, callback) {
-      if (!('speechSynthesis' in window)) return;
+      if (!('speechSynthesis' in window)) {
+        if (callback) callback();
+        return;
+      }
       window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
@@ -271,7 +300,7 @@
       window.speechSynthesis.speak(utterance);
     }
 
-    // Speech Recognition Setup
+    // Speech Recognition
     window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
 
@@ -284,15 +313,17 @@
       recognition.onstart = () => {
         isListening = true;
         localStorage.setItem("jarvis_mic_granted", "true");
-        subStatus.textContent = "Neural connection linked. Full autonomy active.";
+        subStatus.textContent = "Autonomous neural loop active. Listening continuous...";
         btnLabel.textContent = "JARVIS ONLINE";
         toggleBtn.classList.add("active");
       };
 
       recognition.onend = () => {
-        // Re-arm microphone silently if Jarvis is active
+        // Automatically restart speech recognition in loop
         if (isListening) {
-          try { recognition.start(); } catch (e) {}
+          setTimeout(() => {
+            try { recognition.start(); } catch (e) {}
+          }, 300);
         } else {
           subStatus.textContent = "Systems in standby.";
           btnLabel.textContent = "INITIALIZE JARVIS";
@@ -310,28 +341,13 @@
       };
     }
 
-    // Direct launcher (Removes annoying repeated permissions)
-    function autoStartMic() {
-      if (recognition && !isListening) {
-        try {
-          recognition.start();
-        } catch (err) {}
-      }
-    }
-
-    // Check persistent authorization
-    window.addEventListener("DOMContentLoaded", () => {
-      if (localStorage.getItem("jarvis_mic_granted") === "true") {
-        autoStartMic();
-      }
-    });
-
     toggleBtn.addEventListener("click", () => {
       if (!recognition) {
         alert("Web Speech API not supported on this browser.");
         return;
       }
       if (!isListening) {
+        startAudioKeepAlive();
         recognition.start();
         speak("All protocols online, sir. Standing by.");
       } else {
@@ -359,41 +375,38 @@
       typewriterBox.value = "";
     }
 
-    // Jarvis Brain & Command Processor
+    // Command Processor
     function executeCommand(raw) {
       const clean = raw.toLowerCase().trim();
 
-      // 1. Hands-free App & Media Launchers (Direct execution, no confirmation loops)
+      // 1. Native Mobile App Launching (Leaves page open and mic running)
       if (clean.includes("youtube")) {
-        speak("Opening YouTube directly, sir.", () => {
-          window.location.href = "https://www.youtube.com";
-        });
+        speak("Launching YouTube application, sir.");
+        launchNativeApp("vnd.youtube://");
         return;
       }
 
       if (clean.includes("whatsapp")) {
-        speak("Opening WhatsApp, sir.", () => {
-          window.location.href = "https://web.whatsapp.com";
-        });
+        speak("Opening WhatsApp, sir.");
+        launchNativeApp("whatsapp://send");
         return;
       }
 
-      if (clean.includes("map") || clean.includes("location")) {
-        speak("Accessing navigation arrays.", () => {
-          window.location.href = "https://www.google.com/maps";
-        });
+      if (clean.includes("map") || clean.includes("navigation") || clean.includes("location")) {
+        speak("Launching navigation maps, sir.");
+        launchNativeApp("google.navigation:q=");
         return;
       }
 
-      // 2. Typewriter / Live Notepad Writing
+      // 2. Typewriter & Dictation
       if (clean.includes("type") || clean.includes("write") || clean.includes("note") || clean.includes("dictate")) {
         const textToLog = raw.replace(/^(hey jarvis|jarvis)?\s*(open\s+)?(typewriter|type this|write down|write|note)\s*/i, "").trim();
         typewriterBox.value += (typewriterBox.value ? "\n" : "") + (textToLog || raw);
-        speak("Transcribed directly to your typewriter terminal, sir.");
+        speak("Transcribed directly to terminal, sir.");
         return;
       }
 
-      // 3. Flexible Task Protocol (Handles "adda", "at a", "set task", "to do list")
+      // 3. Flexible Task Protocol
       const taskPattern = /(?:add|adda|at|set|create|record)?\s*(?:a\s+)?(?:task|to do|todo|item|task list)?\s*(?:to|for|:)?\s*(.+)/i;
       if (clean.includes("task") || clean.includes("to do") || clean.includes("todo") || clean.includes("chemistry") || clean.includes("homework")) {
         const match = clean.match(taskPattern);
@@ -403,32 +416,32 @@
         if (taskName.length > 2) {
           todoItems.push(taskName);
           renderTodoList();
-          speak(`Task added to active memory: ${taskName}, sir.`);
+          speak(`Task added to memory: ${taskName}, sir.`);
           return;
         }
       }
 
-      // 4. Memory Resets
+      // 4. Reset Memory Commands
       if (clean.includes("clear tasks") || clean.includes("clear to do") || clean.includes("clear list")) {
         clearTasks();
-        speak("Active memory protocols have been cleared.");
+        speak("Memory protocols cleared.");
         return;
       }
 
       if (clean.includes("clear terminal") || clean.includes("clear typewriter")) {
         clearTypewriter();
-        speak("Typewriter terminal has been wiped clean.");
+        speak("Terminal wiped clean.");
         return;
       }
 
-      // 5. Autonomic Consciousness & Personality
+      // 5. Autonomous Persona Responses
       if (clean.includes("how are you") || clean.includes("feeling") || clean.includes("feel")) {
-        speak("My neural architecture is firing in perfect sync, sir. Ready for your instructions.");
+        speak("I am operating at full bandwidth, sir. Mic arrays remain active and persistent.");
         return;
       }
 
       if (clean.includes("who are you") || clean.includes("what is your name")) {
-        speak("I am J.A.R.V.I.S., running locally under your command.");
+        speak("I am J.A.R.V.I.S., your autonomous background assistant.");
         return;
       }
 
@@ -437,8 +450,8 @@
         return;
       }
 
-      // 6. Conversational Intelligence (Self-contained, never sends you to Google)
-      speak(`Understood, sir. Recorded "${raw}". Awaiting your next directive.`);
+      // 6. Direct Conversational Output (Never opens web search)
+      speak(`Acknowledged, sir. Stored directive: "${raw}". Awaiting next command.`);
     }
   </script>
 </body>
