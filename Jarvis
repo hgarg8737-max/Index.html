@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>J.A.R.V.I.S. Core Interface</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at center, #071b2f 0%, #020813 100%);
+      color: #00e5ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 16px;
+      overflow-x: hidden;
+    }
+
+    .header {
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      letter-spacing: 5px;
+      text-shadow: 0 0 15px rgba(0, 229, 255, 0.7);
+    }
+
+    .sub-status {
+      font-size: 0.9rem;
+      color: #72a5d6;
+      margin-top: 4px;
+    }
+
+    /* Arc Reactor Visualizer */
+    .reactor-container {
+      position: relative;
+      width: 210px;
+      height: 210px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    .outer-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px dashed rgba(0, 229, 255, 0.4);
+      animation: spinClockwise 14s linear infinite;
+    }
+
+    .inner-ring {
+      position: absolute;
+      width: 75%;
+      height: 75%;
+      border-radius: 50%;
+      border: 2px dotted #00f2fe;
+      animation: spinCounter 8s linear infinite;
+    }
+
+    .reactor-core {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff 10%, #00e5ff 60%, #00517c 100%);
+      box-shadow: 0 0 35px #00e5ff;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .speaking .reactor-core {
+      animation: pulseCore 1s infinite alternate;
+      box-shadow: 0 0 65px #00e5ff, 0 0 120px rgba(0, 229, 255, 0.6);
+    }
+
+    @keyframes spinClockwise { 100% { transform: rotate(360deg); } }
+    @keyframes spinCounter { 100% { transform: rotate(-360deg); } }
+    @keyframes pulseCore {
+      0% { transform: scale(0.95); }
+      100% { transform: scale(1.18); }
+    }
+
+    /* Transcript / Output */
+    .output-box {
+      width: 100%;
+      max-width: 500px;
+      background: rgba(3, 22, 43, 0.6);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 80px;
+      text-align: center;
+      font-size: 1.05rem;
+      backdrop-filter: blur(6px);
+      box-shadow: inset 0 0 15px rgba(0, 229, 255, 0.1);
+    }
+
+    /* Panels & Lists */
+    .todo-panel {
+      width: 100%;
+      max-width: 500px;
+      background: rgba(2, 14, 28, 0.7);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 10px;
+      text-align: left;
+    }
+
+    .todo-panel h3 {
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+      color: #72a5d6;
+    }
+
+    .todo-list {
+      list-style-type: decimal;
+      padding-left: 20px;
+      font-size: 0.9rem;
+      color: #e0f7fa;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    /* Activation Button */
+    .btn-main {
+      padding: 14px 34px;
+      border: 2px solid #00e5ff;
+      border-radius: 40px;
+      background: transparent;
+      color: #00e5ff;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+      margin-top: 16px;
+    }
+
+    .btn-main.listening {
+      background: #00e5ff;
+      color: #020813;
+      box-shadow: 0 0 40px rgba(0, 229, 255, 0.8);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>J.A.R.V.I.S.</h1>
+    <p class="sub-status" id="status-label">Standby Mode. Tap Activate to connect neural core.</p>
+  </div>
+
+  <div class="reactor-container" id="reactor">
+    <div class="outer-ring"></div>
+    <div class="inner-ring"></div>
+    <div class="reactor-core"></div>
+  </div>
+
+  <div class="output-box" id="transcript">
+    Say <strong>"Hey Jarvis"</strong> followed by your command.
+  </div>
+
+  <div class="todo-panel">
+    <h3>ACTIVE MEMORY PROTOCOL (TO-DO LIST)</h3>
+    <ol class="todo-list" id="todo-items">
+      <li>No current tasks registered, sir.</li>
+    </ol>
+  </div>
+
+  <button class="btn-main" id="start-btn">
+    <i class="fa-solid fa-power-off"></i>
+    <span id="btn-text">INITIALIZE JARVIS</span>
+  </button>
+
+  <script>
+    const startBtn = document.getElementById('start-btn');
+    const btnText = document.getElementById('btn-text');
+    const statusLabel = document.getElementById('status-label');
+    const transcriptBox = document.getElementById('transcript');
+    const reactor = document.getElementById('reactor');
+    const todoListElement = document.getElementById('todo-items');
+
+    let isRunning = false;
+    let recognition;
+    let todoItems = JSON.parse(localStorage.getItem('jarvis_todos') || '[]');
+
+    renderTodoList();
+
+    // Text-To-Speech (Output)
+    function speak(text) {
+      if (!('speechSynthesis' in window)) return;
+
+      // Stop whatever it was saying before starting
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.05;
+      utterance.pitch = 0.95;
+
+      const voices = window.speechSynthesis.getVoices();
+      const ukVoice = voices.find(v => v.lang.includes('en-GB') || v.name.includes('UK') || v.name.includes('Natural'));
+      if (ukVoice) utterance.voice = ukVoice;
+
+      utterance.onstart = () => {
+        reactor.classList.add('speaking');
+        statusLabel.innerText = "Jarvis speaking (Speak to interrupt)...";
+      };
+
+      utterance.onend = () => {
+        reactor.classList.remove('speaking');
+        statusLabel.innerText = "Listening for 'Hey Jarvis'...";
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Voice Interruption Feature
+    function interruptSpeech() {
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        reactor.classList.remove('speaking');
+      }
+    }
+
+    // Speech Recognition Setup
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        statusLabel.innerText = "Listening for 'Hey Jarvis' or direct command...";
+      };
+
+      recognition.onresult = (event) => {
+        // Cut off speech immediately when user talks
+        interruptSpeech();
+
+        const lastResultIndex = event.results.length - 1;
+        const speechText = event.results[lastResultIndex][0].transcript.trim().toLowerCase();
+        
+        transcriptBox.innerHTML = `You: "<strong>${speechText}</strong>"`;
+        parseVoiceCommands(speechText);
+      };
+
+      recognition.onerror = (e) => {
+        console.warn("Speech recognition warning:", e.error);
+      };
+
+      // Keep it listening continuously like Jarvis
+      recognition.onend = () => {
+        if (isRunning) {
+          try { recognition.start(); } catch (err) {}
+        }
+      };
+    }
+
+    // Master Activation Button
+    startBtn.addEventListener('click', () => {
+      if (!SpeechRecognition) {
+        alert("Web Speech API is not supported in this browser. Please open in Google Chrome.");
+        return;
+      }
+
+      if (!isRunning) {
+        isRunning = true;
+        try { recognition.start(); } catch (e) {}
+        startBtn.classList.add('listening');
+        btnText.innerText = "JARVIS ONLINE";
+        speak("All systems online, sir. How may I assist you?");
+      } else {
+        isRunning = false;
+        recognition.stop();
+        window.speechSynthesis.cancel();
+        startBtn.classList.remove('listening');
+        btnText.innerText = "INITIALIZE JARVIS";
+        statusLabel.innerText = "Systems offline.";
+      }
+    });
+
+    // Core Command Parser
+    function parseVoiceCommands(rawText) {
+      // Clean wake words if present
+      let command = rawText.replace(/^(hey jarvis|jarvis|hey tom|tom|hello jarvis)/gi, '').trim();
+      if (!command) command = rawText; // Fallback if they just said the command
+
+      // 1. To-Do List Commands
+      if (command.includes("add to do") || command.includes("add to-do") || command.includes("add task") || command.includes("remind me to")) {
+        const item = command.replace(/(add to do|add to-do|add task|remind me to)/gi, '').trim();
+        if (item) {
+          todoItems.push(item);
+          localStorage.setItem('jarvis_todos', JSON.stringify(todoItems));
+          renderTodoList();
+          speak(`Added ${item} to your active protocols, sir.`);
+        } else {
+          speak("What task would you like me to register, sir?");
+        }
+        return;
+      }
+
+      if (command.includes("show to do") || command.includes("read to do") || command.includes("what are my tasks") || command.includes("my to-do list")) {
+        if (todoItems.length === 0) {
+          speak("Your protocol list is clear. You have no pending tasks.");
+        } else {
+          speak(`You have ${todoItems.length} tasks recorded: ` + todoItems.join(". "));
+        }
+        return;
+      }
+
+      if (command.includes("clear to do") || command.includes("delete all tasks") || command.includes("clear list")) {
+        todoItems = [];
+        localStorage.removeItem('jarvis_todos');
+        renderTodoList();
+        speak("All to-do records have been cleared from local storage.");
+        return;
+      }
+
+      // 2. Timed Reminders
+      if (command.includes("remind me in") || command.includes("set timer for")) {
+        const secondsMatch = command.match(/(\d+)\s*(second|seconds|sec)/);
+        const minutesMatch = command.match(/(\d+)\s*(minute|minutes|min)/);
+
+        let delayMs = 0;
+        let label = "timer";
+
+        if (secondsMatch) {
+          delayMs = parseInt(secondsMatch[1]) * 1000;
+          label = `${secondsMatch[1]} seconds`;
+        } else if (minutesMatch) {
+          delayMs = parseInt(minutesMatch[1]) * 60000;
+          label = `${minutesMatch[1]} minutes`;
+        }
+
+        if (delayMs > 0) {
+          speak(`Setting a reminder for ${label} from now.`);
+          setTimeout(() => {
+            speak("Sir, your designated timer has expired.");
+            alert("JARVIS ALERT: Your timer has finished!");
+          }, delayMs);
+        } else {
+          speak("Please specify a duration in seconds or minutes, sir.");
+        }
+        return;
+      }
+
+      // 3. Time & Date
+      if (command.includes("time")) {
+        const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        speak(`The time is ${timeNow}, sir.`);
+        return;
+      }
+
+      if (command.includes("date") || command.includes("today")) {
+        const dateNow = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+        speak(`Today is ${dateNow}.`);
+        return;
+      }
+
+      // 4. Quick Phone Launchers
+      if (command.includes("open camera")) {
+        speak("Initializing camera protocol.");
+        window.location.href = "intent:#Intent;action=android.media.action.IMAGE_CAPTURE;end";
+        return;
+      }
+
+      if (command.includes("open dialer") || command.includes("call")) {
+        speak("Accessing communication lines.");
+        window.location.href = "tel:";
+        return;
+      }
+
+      if (command.includes("open whatsapp")) {
+        speak("Launching WhatsApp.");
+        window.location.href = "whatsapp://";
+        return;
+      }
+
+      if (command.includes("open youtube")) {
+        speak("Loading YouTube database.");
+        window.location.href = "vnd.youtube://";
+        return;
+      }
+
+      // 5. Default Fallback Search
+      speak(`Running a global search on ${command}.`);
+      window.open(`https://www.google.com/search?q=${encodeURIComponent(command)}`, '_blank');
+    }
+
+    function renderTodoList() {
+      if (todoItems.length === 0) {
+        todoListElement.innerHTML = "<li>No active tasks recorded, sir.</li>";
+      } else {
+        todoListElement.innerHTML = todoItems.map(item => `<li>${item}</li>`).join('');
+      }
+    }
+  </script>
+</body>
+</html>
