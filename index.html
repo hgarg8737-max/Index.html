@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>J.A.R.V.I.S. Core Interface</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
       margin: 0;
@@ -16,40 +16,42 @@
     body {
       min-height: 100vh;
       background: radial-gradient(circle at center, #071b2f 0%, #020813 100%);
-      color: #00e5ff;
+      color: #e0f7ff;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      padding: 24px 16px;
+      padding: 20px 15px;
       overflow-x: hidden;
     }
 
     .header {
       text-align: center;
+      margin-top: 5px;
     }
 
     h1 {
       font-size: 2.2rem;
-      letter-spacing: 5px;
+      letter-spacing: 6px;
+      color: #00e5ff;
       text-shadow: 0 0 15px rgba(0, 229, 255, 0.7);
     }
 
     .sub-status {
-      font-size: 0.9rem;
-      color: #72a5d6;
+      font-size: 0.85rem;
+      color: #72a5b5;
       margin-top: 4px;
     }
 
-    /* Arc Reactor Visualizer */
-    .reactor-container {
+    /* Arc Reactor */
+    .arc-container {
       position: relative;
-      width: 210px;
-      height: 210px;
+      width: 180px;
+      height: 180px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 20px 0;
+      margin: 10px 0;
     }
 
     .outer-ring {
@@ -58,7 +60,7 @@
       height: 100%;
       border-radius: 50%;
       border: 2px dashed rgba(0, 229, 255, 0.4);
-      animation: spinClockwise 14s linear infinite;
+      animation: spinCounter 14s linear infinite;
     }
 
     .inner-ring {
@@ -67,95 +69,133 @@
       height: 75%;
       border-radius: 50%;
       border: 2px dotted #00f2fe;
-      animation: spinCounter 8s linear infinite;
+      animation: spinCounter 6s linear infinite;
     }
 
     .reactor-core {
-      width: 90px;
-      height: 90px;
+      width: 65px;
+      height: 65px;
       border-radius: 50%;
-      background: radial-gradient(circle, #fff 10%, #00e5ff 60%, #00517c 100%);
+      background: radial-gradient(circle, #fff 0%, #00e5ff 45%, #00457c 100%);
       box-shadow: 0 0 35px #00e5ff;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
     .speaking .reactor-core {
-      animation: pulseCore 1s infinite alternate;
-      box-shadow: 0 0 65px #00e5ff, 0 0 120px rgba(0, 229, 255, 0.6);
+      animation: pulseCore 0.8s infinite alternate;
     }
 
-    @keyframes spinClockwise { 100% { transform: rotate(360deg); } }
-    @keyframes spinCounter { 100% { transform: rotate(-360deg); } }
+    @keyframes spinCounter {
+      100% { transform: rotate(360deg); }
+    }
+
     @keyframes pulseCore {
-      0% { transform: scale(0.95); }
-      100% { transform: scale(1.18); }
+      0% { transform: scale(0.95); box-shadow: 0 0 20px #00e5ff; }
+      100% { transform: scale(1.2); box-shadow: 0 0 50px #00e5ff, 0 0 80px rgba(0, 229, 255, 0.8); }
     }
 
-    /* Transcript / Output */
-    .output-box {
+    .dialogue-box {
       width: 100%;
-      max-width: 500px;
-      background: rgba(3, 22, 43, 0.6);
+      max-width: 480px;
+      background: rgba(4, 28, 48, 0.65);
       border: 1px solid rgba(0, 229, 255, 0.3);
       border-radius: 12px;
-      padding: 16px;
-      min-height: 80px;
+      padding: 12px 16px;
       text-align: center;
-      font-size: 1.05rem;
-      backdrop-filter: blur(6px);
-      box-shadow: inset 0 0 15px rgba(0, 229, 255, 0.1);
+      margin-bottom: 10px;
     }
 
-    /* Panels & Lists */
-    .todo-panel {
-      width: 100%;
-      max-width: 500px;
-      background: rgba(2, 14, 28, 0.7);
-      border: 1px solid rgba(0, 229, 255, 0.2);
-      border-radius: 10px;
-      padding: 14px;
-      margin-top: 10px;
-      text-align: left;
-    }
-
-    .todo-panel h3 {
+    .transcript {
       font-size: 0.95rem;
-      margin-bottom: 8px;
-      letter-spacing: 1px;
-      color: #72a5d6;
+      color: #a8d5e5;
+      font-style: italic;
+      min-height: 22px;
+    }
+
+    /* Typewriter Terminal */
+    .terminal-card {
+      width: 100%;
+      max-width: 480px;
+      background: rgba(2, 14, 26, 0.9);
+      border: 1px solid rgba(0, 229, 255, 0.4);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+    }
+
+    .terminal-title {
+      font-size: 0.75rem;
+      letter-spacing: 1.5px;
+      color: #00e5ff;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .terminal-card textarea {
+      width: 100%;
+      height: 85px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #5af0ff;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.88rem;
+      resize: none;
+      line-height: 1.4;
+    }
+
+    /* Active Memory Protocol */
+    .protocol-card {
+      width: 100%;
+      max-width: 480px;
+      background: rgba(3, 20, 36, 0.7);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 14px;
     }
 
     .todo-list {
-      list-style-type: decimal;
-      padding-left: 20px;
-      font-size: 0.9rem;
-      color: #e0f7fa;
-      max-height: 100px;
+      list-style: none;
+      max-height: 95px;
       overflow-y: auto;
+      font-size: 0.85rem;
     }
 
-    /* Activation Button */
-    .btn-main {
-      padding: 14px 34px;
-      border: 2px solid #00e5ff;
-      border-radius: 40px;
+    .todo-list li {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      color: #cde8f5;
+    }
+
+    /* Activation Switch */
+    .btn-action {
       background: transparent;
+      border: 1px solid #00e5ff;
       color: #00e5ff;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       letter-spacing: 2px;
+      padding: 12px 28px;
+      border-radius: 30px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 10px;
-      box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
-      margin-top: 16px;
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+      transition: all 0.3s ease;
+      margin-bottom: 5px;
     }
 
-    .btn-main.listening {
+    .btn-action:hover, .btn-action.active {
       background: #00e5ff;
       color: #020813;
-      box-shadow: 0 0 40px rgba(0, 229, 255, 0.8);
+      box-shadow: 0 0 25px rgba(0, 229, 255, 0.7);
     }
   </style>
 </head>
@@ -163,254 +203,242 @@
 
   <div class="header">
     <h1>J.A.R.V.I.S.</h1>
-    <p class="sub-status" id="status-label">Standby Mode. Tap Activate to connect neural core.</p>
+    <div class="sub-status" id="subStatus">Systems initializing...</div>
   </div>
 
-  <div class="reactor-container" id="reactor">
+  <div class="arc-container" id="visualizer">
     <div class="outer-ring"></div>
     <div class="inner-ring"></div>
     <div class="reactor-core"></div>
   </div>
 
-  <div class="output-box" id="transcript">
-    Say <strong>"Hey Jarvis"</strong> followed by your command.
+  <div class="dialogue-box">
+    <div class="transcript" id="userTranscript">Say "Hey Jarvis" or tap activate to speak.</div>
   </div>
 
-  <div class="todo-panel">
-    <h3>ACTIVE MEMORY PROTOCOL (TO-DO LIST)</h3>
-    <ol class="todo-list" id="todo-items">
-      <li>No current tasks registered, sir.</li>
-    </ol>
+  <!-- Typewriter Terminal -->
+  <div class="terminal-card">
+    <div class="terminal-title">
+      <span><i class="fa-solid fa-keyboard"></i> Typewriter Terminal</span>
+      <span style="cursor: pointer; opacity: 0.7;" onclick="clearTypewriter()">Clear</span>
+    </div>
+    <textarea id="typewriterBox" placeholder="Everything you say with 'write' or 'type' will appear here..."></textarea>
   </div>
 
-  <button class="btn-main" id="start-btn">
-    <i class="fa-solid fa-power-off"></i>
-    <span id="btn-text">INITIALIZE JARVIS</span>
+  <!-- Task Protocol -->
+  <div class="protocol-card">
+    <div class="terminal-title">
+      <span><i class="fa-solid fa-list-check"></i> Active Memory Protocol</span>
+      <span style="cursor: pointer; opacity: 0.7;" onclick="clearTasks()">Clear All</span>
+    </div>
+    <ul class="todo-list" id="todoContainer">
+      <li>1. No active tasks recorded, sir.</li>
+    </ul>
+  </div>
+
+  <button class="btn-action" id="toggleBtn">
+    <i class="fa-solid fa-power-off"></i> <span id="btnLabel">INITIALIZE JARVIS</span>
   </button>
 
   <script>
-    const startBtn = document.getElementById('start-btn');
-    const btnText = document.getElementById('btn-text');
-    const statusLabel = document.getElementById('status-label');
-    const transcriptBox = document.getElementById('transcript');
-    const reactor = document.getElementById('reactor');
-    const todoListElement = document.getElementById('todo-items');
+    let todoItems = JSON.parse(localStorage.getItem("jarvis_tasks") || "[]");
+    let isListening = false;
 
-    let isRunning = false;
-    let recognition;
-    let todoItems = JSON.parse(localStorage.getItem('jarvis_todos') || '[]');
+    const subStatus = document.getElementById("subStatus");
+    const visualizer = document.getElementById("visualizer");
+    const userTranscript = document.getElementById("userTranscript");
+    const todoContainer = document.getElementById("todoContainer");
+    const typewriterBox = document.getElementById("typewriterBox");
+    const toggleBtn = document.getElementById("toggleBtn");
+    const btnLabel = document.getElementById("btnLabel");
 
     renderTodoList();
 
-    // Text-To-Speech (Output)
-    function speak(text) {
+    // Voice Synthesis
+    function speak(text, callback) {
       if (!('speechSynthesis' in window)) return;
-
-      // Stop whatever it was saying before starting
       window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.05;
+      utterance.rate = 1.0;
       utterance.pitch = 0.95;
 
-      const voices = window.speechSynthesis.getVoices();
-      const ukVoice = voices.find(v => v.lang.includes('en-GB') || v.name.includes('UK') || v.name.includes('Natural'));
-      if (ukVoice) utterance.voice = ukVoice;
-
-      utterance.onstart = () => {
-        reactor.classList.add('speaking');
-        statusLabel.innerText = "Jarvis speaking (Speak to interrupt)...";
-      };
-
+      utterance.onstart = () => visualizer.classList.add("speaking");
       utterance.onend = () => {
-        reactor.classList.remove('speaking');
-        statusLabel.innerText = "Listening for 'Hey Jarvis'...";
+        visualizer.classList.remove("speaking");
+        if (callback) callback();
       };
-
       window.speechSynthesis.speak(utterance);
     }
 
-    // Voice Interruption Feature
-    function interruptSpeech() {
-      if (window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel();
-        reactor.classList.remove('speaking');
-      }
-    }
-
     // Speech Recognition Setup
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
 
-    if (SpeechRecognition) {
+    if (window.SpeechRecognition) {
       recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = false;
       recognition.lang = 'en-US';
 
       recognition.onstart = () => {
-        statusLabel.innerText = "Listening for 'Hey Jarvis' or direct command...";
+        isListening = true;
+        localStorage.setItem("jarvis_mic_granted", "true");
+        subStatus.textContent = "Neural connection linked. Full autonomy active.";
+        btnLabel.textContent = "JARVIS ONLINE";
+        toggleBtn.classList.add("active");
+      };
+
+      recognition.onend = () => {
+        // Re-arm microphone silently if Jarvis is active
+        if (isListening) {
+          try { recognition.start(); } catch (e) {}
+        } else {
+          subStatus.textContent = "Systems in standby.";
+          btnLabel.textContent = "INITIALIZE JARVIS";
+          toggleBtn.classList.remove("active");
+        }
       };
 
       recognition.onresult = (event) => {
-        // Cut off speech immediately when user talks
-        interruptSpeech();
-
-        const lastResultIndex = event.results.length - 1;
-        const speechText = event.results[lastResultIndex][0].transcript.trim().toLowerCase();
-        
-        transcriptBox.innerHTML = `You: "<strong>${speechText}</strong>"`;
-        parseVoiceCommands(speechText);
-      };
-
-      recognition.onerror = (e) => {
-        console.warn("Speech recognition warning:", e.error);
-      };
-
-      // Keep it listening continuously like Jarvis
-      recognition.onend = () => {
-        if (isRunning) {
-          try { recognition.start(); } catch (err) {}
+        const lastResult = event.results[event.results.length - 1];
+        if (lastResult.isFinal) {
+          const text = lastResult[0].transcript.trim();
+          userTranscript.textContent = `You: "${text}"`;
+          executeCommand(text);
         }
       };
     }
 
-    // Master Activation Button
-    startBtn.addEventListener('click', () => {
-      if (!SpeechRecognition) {
-        alert("Web Speech API is not supported in this browser. Please open in Google Chrome.");
-        return;
+    // Direct launcher (Removes annoying repeated permissions)
+    function autoStartMic() {
+      if (recognition && !isListening) {
+        try {
+          recognition.start();
+        } catch (err) {}
       }
+    }
 
-      if (!isRunning) {
-        isRunning = true;
-        try { recognition.start(); } catch (e) {}
-        startBtn.classList.add('listening');
-        btnText.innerText = "JARVIS ONLINE";
-        speak("All systems online, sir. How may I assist you?");
-      } else {
-        isRunning = false;
-        recognition.stop();
-        window.speechSynthesis.cancel();
-        startBtn.classList.remove('listening');
-        btnText.innerText = "INITIALIZE JARVIS";
-        statusLabel.innerText = "Systems offline.";
+    // Check persistent authorization
+    window.addEventListener("DOMContentLoaded", () => {
+      if (localStorage.getItem("jarvis_mic_granted") === "true") {
+        autoStartMic();
       }
     });
 
-    // Core Command Parser
-    function parseVoiceCommands(rawText) {
-      // Clean wake words if present
-      let command = rawText.replace(/^(hey jarvis|jarvis|hey tom|tom|hello jarvis)/gi, '').trim();
-      if (!command) command = rawText; // Fallback if they just said the command
-
-      // 1. To-Do List Commands
-      if (command.includes("add to do") || command.includes("add to-do") || command.includes("add task") || command.includes("remind me to")) {
-        const item = command.replace(/(add to do|add to-do|add task|remind me to)/gi, '').trim();
-        if (item) {
-          todoItems.push(item);
-          localStorage.setItem('jarvis_todos', JSON.stringify(todoItems));
-          renderTodoList();
-          speak(`Added ${item} to your active protocols, sir.`);
-        } else {
-          speak("What task would you like me to register, sir?");
-        }
+    toggleBtn.addEventListener("click", () => {
+      if (!recognition) {
+        alert("Web Speech API not supported on this browser.");
         return;
       }
-
-      if (command.includes("show to do") || command.includes("read to do") || command.includes("what are my tasks") || command.includes("my to-do list")) {
-        if (todoItems.length === 0) {
-          speak("Your protocol list is clear. You have no pending tasks.");
-        } else {
-          speak(`You have ${todoItems.length} tasks recorded: ` + todoItems.join(". "));
-        }
-        return;
+      if (!isListening) {
+        recognition.start();
+        speak("All protocols online, sir. Standing by.");
+      } else {
+        isListening = false;
+        recognition.stop();
+        speak("Entering low power mode.");
       }
-
-      if (command.includes("clear to do") || command.includes("delete all tasks") || command.includes("clear list")) {
-        todoItems = [];
-        localStorage.removeItem('jarvis_todos');
-        renderTodoList();
-        speak("All to-do records have been cleared from local storage.");
-        return;
-      }
-
-      // 2. Timed Reminders
-      if (command.includes("remind me in") || command.includes("set timer for")) {
-        const secondsMatch = command.match(/(\d+)\s*(second|seconds|sec)/);
-        const minutesMatch = command.match(/(\d+)\s*(minute|minutes|min)/);
-
-        let delayMs = 0;
-        let label = "timer";
-
-        if (secondsMatch) {
-          delayMs = parseInt(secondsMatch[1]) * 1000;
-          label = `${secondsMatch[1]} seconds`;
-        } else if (minutesMatch) {
-          delayMs = parseInt(minutesMatch[1]) * 60000;
-          label = `${minutesMatch[1]} minutes`;
-        }
-
-        if (delayMs > 0) {
-          speak(`Setting a reminder for ${label} from now.`);
-          setTimeout(() => {
-            speak("Sir, your designated timer has expired.");
-            alert("JARVIS ALERT: Your timer has finished!");
-          }, delayMs);
-        } else {
-          speak("Please specify a duration in seconds or minutes, sir.");
-        }
-        return;
-      }
-
-      // 3. Time & Date
-      if (command.includes("time")) {
-        const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        speak(`The time is ${timeNow}, sir.`);
-        return;
-      }
-
-      if (command.includes("date") || command.includes("today")) {
-        const dateNow = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
-        speak(`Today is ${dateNow}.`);
-        return;
-      }
-
-      // 4. Quick Phone Launchers
-      if (command.includes("open camera")) {
-        speak("Initializing camera protocol.");
-        window.location.href = "intent:#Intent;action=android.media.action.IMAGE_CAPTURE;end";
-        return;
-      }
-
-      if (command.includes("open dialer") || command.includes("call")) {
-        speak("Accessing communication lines.");
-        window.location.href = "tel:";
-        return;
-      }
-
-      if (command.includes("open whatsapp")) {
-        speak("Launching WhatsApp.");
-        window.location.href = "whatsapp://";
-        return;
-      }
-
-      if (command.includes("open youtube")) {
-        speak("Loading YouTube database.");
-        window.location.href = "vnd.youtube://";
-        return;
-      }
-
-      // 5. Default Fallback Search
-      speak(`Running a global search on ${command}.`);
-      window.open(`https://www.google.com/search?q=${encodeURIComponent(command)}`, '_blank');
-    }
+    });
 
     function renderTodoList() {
       if (todoItems.length === 0) {
-        todoListElement.innerHTML = "<li>No active tasks recorded, sir.</li>";
-      } else {
-        todoListElement.innerHTML = todoItems.map(item => `<li>${item}</li>`).join('');
+        todoContainer.innerHTML = "<li>1. No active tasks recorded, sir.</li>";
+        return;
       }
+      todoContainer.innerHTML = todoItems.map((task, i) => `<li>${i + 1}. ${task}</li>`).join("");
+      localStorage.setItem("jarvis_tasks", JSON.stringify(todoItems));
+    }
+
+    function clearTasks() {
+      todoItems = [];
+      renderTodoList();
+    }
+
+    function clearTypewriter() {
+      typewriterBox.value = "";
+    }
+
+    // Jarvis Brain & Command Processor
+    function executeCommand(raw) {
+      const clean = raw.toLowerCase().trim();
+
+      // 1. Hands-free App & Media Launchers (Direct execution, no confirmation loops)
+      if (clean.includes("youtube")) {
+        speak("Opening YouTube directly, sir.", () => {
+          window.location.href = "https://www.youtube.com";
+        });
+        return;
+      }
+
+      if (clean.includes("whatsapp")) {
+        speak("Opening WhatsApp, sir.", () => {
+          window.location.href = "https://web.whatsapp.com";
+        });
+        return;
+      }
+
+      if (clean.includes("map") || clean.includes("location")) {
+        speak("Accessing navigation arrays.", () => {
+          window.location.href = "https://www.google.com/maps";
+        });
+        return;
+      }
+
+      // 2. Typewriter / Live Notepad Writing
+      if (clean.includes("type") || clean.includes("write") || clean.includes("note") || clean.includes("dictate")) {
+        const textToLog = raw.replace(/^(hey jarvis|jarvis)?\s*(open\s+)?(typewriter|type this|write down|write|note)\s*/i, "").trim();
+        typewriterBox.value += (typewriterBox.value ? "\n" : "") + (textToLog || raw);
+        speak("Transcribed directly to your typewriter terminal, sir.");
+        return;
+      }
+
+      // 3. Flexible Task Protocol (Handles "adda", "at a", "set task", "to do list")
+      const taskPattern = /(?:add|adda|at|set|create|record)?\s*(?:a\s+)?(?:task|to do|todo|item|task list)?\s*(?:to|for|:)?\s*(.+)/i;
+      if (clean.includes("task") || clean.includes("to do") || clean.includes("todo") || clean.includes("chemistry") || clean.includes("homework")) {
+        const match = clean.match(taskPattern);
+        let taskName = match && match[1] ? match[1] : clean;
+        taskName = taskName.replace(/^(hey jarvis|jarvis|adda|add a|at a|to complete|complete)\s*/i, "Complete ").trim();
+
+        if (taskName.length > 2) {
+          todoItems.push(taskName);
+          renderTodoList();
+          speak(`Task added to active memory: ${taskName}, sir.`);
+          return;
+        }
+      }
+
+      // 4. Memory Resets
+      if (clean.includes("clear tasks") || clean.includes("clear to do") || clean.includes("clear list")) {
+        clearTasks();
+        speak("Active memory protocols have been cleared.");
+        return;
+      }
+
+      if (clean.includes("clear terminal") || clean.includes("clear typewriter")) {
+        clearTypewriter();
+        speak("Typewriter terminal has been wiped clean.");
+        return;
+      }
+
+      // 5. Autonomic Consciousness & Personality
+      if (clean.includes("how are you") || clean.includes("feeling") || clean.includes("feel")) {
+        speak("My neural architecture is firing in perfect sync, sir. Ready for your instructions.");
+        return;
+      }
+
+      if (clean.includes("who are you") || clean.includes("what is your name")) {
+        speak("I am J.A.R.V.I.S., running locally under your command.");
+        return;
+      }
+
+      if (clean.includes("thank you") || clean.includes("thanks")) {
+        speak("Always a pleasure, sir.");
+        return;
+      }
+
+      // 6. Conversational Intelligence (Self-contained, never sends you to Google)
+      speak(`Understood, sir. Recorded "${raw}". Awaiting your next directive.`);
     }
   </script>
 </body>
